@@ -17,18 +17,14 @@ import java.util.List;
 @Entity
 public class UserEntity implements UserDetails {
 
+    String username;
+    String password_hash;
+    String email;
+    @Enumerated(EnumType.STRING)
+    Role role;
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
-
-    String username;
-
-    String password_hash;
-
-    String email;
-
-    @Enumerated(EnumType.STRING)
-    Role role;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

@@ -4,7 +4,6 @@ import com.example.AuthService.entity.UserEntity;
 import com.example.AuthService.repository.UserRepository;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,12 +18,12 @@ import java.util.Map;
 public class JwtService {
 
     private final UserRepository userRepository;
+    @Value(value = "${secure.jwt.secret}")
+    private String secret;
 
     JwtService(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
-    @Value(value = "${secure.jwt.secret}")
-    private String secret;
 
     public UserEntity verify(String token) {
         if (!isToken(token)) {
