@@ -3,18 +3,16 @@ package com.example.AuthService.services;
 import com.example.AuthService.dto.*;
 import com.example.AuthService.entity.RefreshToken;
 import com.example.AuthService.entity.Role;
-import com.example.AuthService.entity.User;
+import com.example.AuthService.entity.UserEntity;
 import com.example.AuthService.repository.RefreshTokenRepository;
 import com.example.AuthService.repository.UserRepository;
 import lombok.AllArgsConstructor;
-import org.apache.tomcat.util.descriptor.web.ContextHandler;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -27,22 +25,21 @@ public class AuthenticationService {
     private final JwtService jwtService;
     private final BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder(10);
 
-
     public AuthenticationResponseDto register(RegisterRequestDto registerRequestDto) {
-        if (userRepository.existsByEmail(registerRequestDto.email()) || userRepository.existsByUsername(registerRequestDto.username())) {
+        if (userRepository.existsByEmail(registerRequestDto.getEmail()) || userRepository.existsByUsername(registerRequestDto.getUsername())) {
             throw new RuntimeException();
         }
-        User newUser = User.builder()
-                .email(registerRequestDto.email())
-                .username(registerRequestDto.username())
-                .password_hash(bCryptPasswordEncoder.encode(registerRequestDto.password()))
+        UserEntity newUserEntity = UserEntity.builder()
+                .email(registerRequestDto.getEmail())
+                .username(registerRequestDto.getUsername())
+                .password_hash(bCryptPasswordEncoder.encode(registerRequestDto.getPassword()))
                 .role(Role.ROLE_CLIENT)
                 .build();
 
-        newUser = userRepository.save(newUser);
+        newUserEntity = userRepository.save(newUserEntity);
 
-        String accessToken = jwtService.generateAccessToken(newUser);
-        RefreshToken refreshToken = generateNewRefreshToken(newUser);
+        String accessToken = jwtService.generateAccessToken(newUserEntity);
+        RefreshToken refreshToken = generateNewRefreshToken(newUserEntity);
         return new AuthenticationResponseDto(
                 accessToken,
                 refreshToken.getTokenBody().toString()
@@ -51,9 +48,9 @@ public class AuthenticationService {
 
     public AuthenticationResponseDto login(LoginRequestDto loginRequestDto) {
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequestDto.username(), loginRequestDto.password()));
-        User user = userRepository.findByUsername(loginRequestDto.username()).orElseThrow(RuntimeException::new);
-        String accessToken = jwtService.generateAccessToken(user);
-        RefreshToken refreshToken = generateNewRefreshToken(user);
+        UserEntity userEntity = userRepository.findByUsername(loginRequestDto.username()).orElseThrow(RuntimeException::new);
+        String accessToken = jwtService.generateAccessToken(userEntity);
+        RefreshToken refreshToken = generateNewRefreshToken(userEntity);
         return new AuthenticationResponseDto(
                 accessToken,
                 refreshToken.getTokenBody().toString()
@@ -78,11 +75,11 @@ public class AuthenticationService {
         SecurityContextHolder.clearContext();
     }
 
-    private RefreshToken generateNewRefreshToken(User user) {
+    private RefreshToken generateNewRefreshToken(UserEntity userEntity) {
         UUID tokenBody = UUID.randomUUID();
-        var refreshToken =  RefreshToken.builder()
+        var refreshToken = RefreshToken.builder()
                 .tokenBody(tokenBody)
-                .owner(user)
+                .owner(userEntity)
                 .expiryTime(System.currentTimeMillis() + 1000L * 60 * 60 * 24 * 20)
                 .build();
 

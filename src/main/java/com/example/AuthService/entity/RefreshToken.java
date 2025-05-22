@@ -15,9 +15,9 @@ public class RefreshToken {
     @Id
     private UUID tokenBody;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "owner_id", referencedColumnName = "id")
-    private User owner;
+    private UserEntity owner;
 
     private Long expiryTime;
 }

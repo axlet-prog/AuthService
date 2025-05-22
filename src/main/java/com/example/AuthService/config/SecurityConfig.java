@@ -19,7 +19,6 @@ import java.util.Arrays;
 import java.util.List;
 
 @Configuration
-
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
@@ -27,12 +26,6 @@ public class SecurityConfig {
     private final AuthenticationProvider authenticationProvider;
     private final JwtFilter jwtFilter;
 
-    private String[] unauthorizedUrls = {
-            "auth/register",
-            "auth/login",
-            "auth/logout",
-            "auth/refresh"
-    };
 
     public SecurityConfig(AuthenticationProvider authenticationProvider, JwtFilter jwtFilter) {
         this.authenticationProvider = authenticationProvider;
@@ -61,6 +54,7 @@ public class SecurityConfig {
                 })
                 .authorizeHttpRequests((authorize) -> {
                     authorize
+                            .requestMatchers("/auth/register").permitAll()
                             .anyRequest().authenticated();
                 })
                 .authenticationProvider(authenticationProvider)

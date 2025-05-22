@@ -1,12 +1,11 @@
 package com.example.AuthService.config;
 
-import com.example.AuthService.entity.User;
+import com.example.AuthService.entity.UserEntity;
 import com.example.AuthService.services.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -19,10 +18,13 @@ import java.io.IOException;
 @Component
 public class JwtFilter extends OncePerRequestFilter {
 
-    @Autowired
-    private JwtService jwtService;
+    private final JwtService jwtService;
 
-    private String BEARER_PREFIX = "Bearer ";
+    public JwtFilter(JwtService jwtService) {
+        this.jwtService = jwtService;
+    }
+
+    public final static String BEARER_PREFIX = "Bearer ";
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -32,15 +34,16 @@ public class JwtFilter extends OncePerRequestFilter {
 
         String authHeader = request.getHeader("Authorization");
         if (authHeader == null || !authHeader.startsWith(BEARER_PREFIX)) {
-            throw new ServletException("Authorization header is incorrect");
+            filterChain.doFilter(request, response);
+            return;
         }
 
         String token = authHeader.substring(BEARER_PREFIX.length());
-        User user = jwtService.verify(token);
+        UserEntity userEntity = jwtService.verify(token);
 
         SecurityContext context = SecurityContextHolder.getContext();
         UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                user, null, user.getAuthorities()
+                userEntity, null, userEntity.getAuthorities()
         );
 
         authToken.setDetails(new WebAuthenticationDetails(request));
