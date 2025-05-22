@@ -1,6 +1,9 @@
 package com.example.AuthService.dto;
 
-public record LoginRequestDto(
-   String username,
-   String password
-) {}
+import lombok.Data;
+
+@Data
+public class LoginRequestDto {
+    private String username;
+    private String password;
+}

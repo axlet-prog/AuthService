@@ -1,5 +1,8 @@
 package com.example.AuthService.dto;
 
-public record RefreshRequestDto(
-   String refreshToken
-) {}
+import lombok.Data;
+
+@Data
+public class RefreshRequestDto {
+    private String refreshToken;
+}
