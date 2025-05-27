@@ -6,11 +6,12 @@ import com.example.AuthService.entity.Role;
 import com.example.AuthService.entity.UserEntity;
 import com.example.AuthService.repository.RefreshTokenRepository;
 import com.example.AuthService.repository.UserRepository;
+import io.jsonwebtoken.Claims;
 import lombok.AllArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
@@ -23,7 +24,7 @@ public class AuthenticationService {
     private final AuthenticationManager authenticationManager;
     private final RefreshTokenRepository refreshTokenRepository;
     private final JwtService jwtService;
-    private final BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder(10);
+    private final PasswordEncoder bCryptPasswordEncoder;
 
     public AuthenticationResponseDto register(RegisterRequestDto registerRequestDto) {
         if (userRepository.existsByEmail(registerRequestDto.getEmail()) || userRepository.existsByUsername(registerRequestDto.getUsername())) {
@@ -38,6 +39,8 @@ public class AuthenticationService {
 
         newUserEntity = userRepository.save(newUserEntity);
 
+        System.out.println("Registered user: " + newUserEntity);
+        System.out.println("Password: " + bCryptPasswordEncoder.encode(newUserEntity.getPassword()));
         String accessToken = jwtService.generateAccessToken(newUserEntity);
         RefreshToken refreshToken = generateNewRefreshToken(newUserEntity);
         return new AuthenticationResponseDto(
@@ -47,8 +50,12 @@ public class AuthenticationService {
     }
 
     public AuthenticationResponseDto login(LoginRequestDto loginRequestDto) {
-        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequestDto.username(), loginRequestDto.password()));
-        UserEntity userEntity = userRepository.findByUsername(loginRequestDto.username()).orElseThrow(RuntimeException::new);
+        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
+                loginRequestDto.getUsername(),
+                loginRequestDto.getPassword()
+        ));
+
+        UserEntity userEntity = userRepository.findByUsername(loginRequestDto.getUsername()).orElseThrow(RuntimeException::new);
         String accessToken = jwtService.generateAccessToken(userEntity);
         RefreshToken refreshToken = generateNewRefreshToken(userEntity);
         return new AuthenticationResponseDto(
@@ -58,7 +65,7 @@ public class AuthenticationService {
     }
 
     public AuthenticationResponseDto refresh(RefreshRequestDto refreshRequestDto) {
-        UUID refreshTokenBody = UUID.fromString(refreshRequestDto.refreshToken());
+        UUID refreshTokenBody = UUID.fromString(refreshRequestDto.getRefreshToken());
         var refreshedToken = updateRefreshToken(refreshTokenBody);
         var accessToken = jwtService.generateAccessToken(refreshedToken.getOwner());
         return new AuthenticationResponseDto(
@@ -68,11 +75,24 @@ public class AuthenticationService {
     }
 
     public void logout(LogoutRequestDto logoutRequestDto) {
-        UUID refreshTokenBody = UUID.fromString(logoutRequestDto.refreshToken());
+        UUID refreshTokenBody = UUID.fromString(logoutRequestDto.getRefreshToken());
 
         RefreshToken refreshToken = refreshTokenRepository.findByTokenBody(refreshTokenBody).orElseThrow(RuntimeException::new);
         refreshTokenRepository.delete(refreshToken);
         SecurityContextHolder.clearContext();
+    }
+
+    public boolean authorizeRequest(String token, Role role) {
+        Claims claims = jwtService.getClaims(token);
+        long idFromToken = claims.get("id", Long.class);
+        String username = claims.getSubject();
+
+        UserEntity userEntity = userRepository.findById(idFromToken).orElseThrow(RuntimeException::new);
+        if (!userEntity.getUsername().equals(username)) {
+            throw new RuntimeException();
+        }
+
+        return userEntity.getRole().equals(role);
     }
 
     private RefreshToken generateNewRefreshToken(UserEntity userEntity) {

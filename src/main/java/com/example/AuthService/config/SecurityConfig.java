@@ -25,7 +25,12 @@ public class SecurityConfig {
 
     private final AuthenticationProvider authenticationProvider;
     private final JwtFilter jwtFilter;
-
+    private final String[] whiteList = {
+            "/auth/login",
+            "/auth/register",
+            "/auth/refresh",
+            "/auth/logout",
+    };
 
     public SecurityConfig(AuthenticationProvider authenticationProvider, JwtFilter jwtFilter) {
         this.authenticationProvider = authenticationProvider;
@@ -43,7 +48,6 @@ public class SecurityConfig {
         return source;
     }
 
-
     @Bean
     SecurityFilterChain filterChain(final HttpSecurity http, ProjectInfoAutoConfiguration projectInfoAutoConfiguration) throws Exception {
         return http
@@ -54,12 +58,11 @@ public class SecurityConfig {
                 })
                 .authorizeHttpRequests((authorize) -> {
                     authorize
-                            .requestMatchers("/auth/register").permitAll()
-                            .anyRequest().authenticated();
+                            .requestMatchers(whiteList).permitAll()
+                            .anyRequest().permitAll();
                 })
                 .authenticationProvider(authenticationProvider)
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
-
     }
 }

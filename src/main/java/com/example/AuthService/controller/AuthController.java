@@ -1,6 +1,7 @@
 package com.example.AuthService.controller;
 
 import com.example.AuthService.dto.*;
+import com.example.AuthService.entity.Role;
 import com.example.AuthService.services.AuthenticationService;
 import com.example.AuthService.services.JwtService;
 import lombok.RequiredArgsConstructor;
@@ -13,7 +14,6 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/auth")
 public class AuthController {
 
-    private final JwtService jwtService;
     private final AuthenticationService authenticationService;
 
     @PostMapping("/register")
@@ -38,12 +38,23 @@ public class AuthController {
     }
 
     @PostMapping("/verify")
-    public ResponseEntity<Void> register(@RequestHeader("Authorization") String token) {
+    public ResponseEntity<Void> verifyToken(@RequestHeader("Authorization") String token, @RequestParam(value = "role", defaultValue = "client") String role) {
         try {
-            jwtService.verify(token.substring(7));
-            return ResponseEntity.ok().build();
+            Role userRole;
+            switch (role.trim().toLowerCase()) {
+                case "admin" -> userRole = Role.ROLE_ADMIN;
+                case "client" -> userRole = Role.ROLE_CLIENT;
+                case "courier" -> userRole = Role.ROLE_COURIER;
+                default -> throw new IllegalStateException("Unexpected value: " + role);
+            }
+            String jwtToken = token.substring(7);
+            if (authenticationService.authorizeRequest(jwtToken, userRole)) {
+                return ResponseEntity.ok().build();
+            } else {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
     }
 }

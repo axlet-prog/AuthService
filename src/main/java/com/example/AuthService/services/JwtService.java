@@ -36,7 +36,6 @@ public class JwtService {
         );
     }
 
-
     private boolean isToken(String token) {
         try {
             Claims claims = Jwts.parser().verifyWith(getSigningKey()).build().parseSignedClaims(token).getPayload();
@@ -46,7 +45,7 @@ public class JwtService {
         return true;
     }
 
-    private Claims getClaims(String token) {
+    public Claims getClaims(String token) {
         return Jwts.parser().verifyWith(getSigningKey()).build().parseSignedClaims(token).getPayload();
     }
 
