@@ -30,7 +30,21 @@ public class SecurityConfig {
             "/auth/register",
             "/auth/refresh",
             "/auth/logout",
+            "/v2/api-docs",
+            "/v3/api-docs",
+            "/v3/api-docs/**",
+            "/actuator/**",
+            "/swagger-resources",
+            "/swagger-resources/**",
+            "/configuration/ui",
+            "/swagger-ui/**",
+            "/webjars/**",
+            "/docs",
+            "/swagger-ui.html",
+            "/v3/**"
     };
+
+
 
     public SecurityConfig(AuthenticationProvider authenticationProvider, JwtFilter jwtFilter) {
         this.authenticationProvider = authenticationProvider;

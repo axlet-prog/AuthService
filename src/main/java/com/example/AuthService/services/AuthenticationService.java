@@ -95,6 +95,11 @@ public class AuthenticationService {
         return userEntity.getRole().equals(role);
     }
 
+    public Long parseTokenForUserId(String token) {
+        return jwtService.getIdFromToken(token);
+    }
+
+
     private RefreshToken generateNewRefreshToken(UserEntity userEntity) {
         UUID tokenBody = UUID.randomUUID();
         var refreshToken = RefreshToken.builder()

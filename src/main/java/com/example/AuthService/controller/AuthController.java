@@ -57,4 +57,10 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
     }
+
+    @PostMapping("/parse_id")
+    public ResponseEntity<Long> parseIdFromToken(@RequestHeader("Authorization") String token) {
+        String jwtToken = token.substring(7);
+        return ResponseEntity.ok(authenticationService.parseTokenForUserId(jwtToken));
+    }
 }
