@@ -99,6 +99,19 @@ public class AuthenticationService {
         return jwtService.getIdFromToken(token);
     }
 
+    public String parseTokenForUserRole(String token) {
+        return jwtService.getRoleFromToken(token);
+    }
+
+    public void changeRole(ChangeRoleRequest request) {
+        long targetUserId = request.getUserId();
+        UserEntity userEntity = userRepository.findById(targetUserId).orElseThrow(
+                () -> new RuntimeException("user with id " + targetUserId + " not found")
+        );
+        userEntity.setRole(request.getNewRole());
+        userRepository.save(userEntity);
+    }
+
 
     private RefreshToken generateNewRefreshToken(UserEntity userEntity) {
         UUID tokenBody = UUID.randomUUID();

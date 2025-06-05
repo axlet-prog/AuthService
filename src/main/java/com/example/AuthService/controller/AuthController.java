@@ -3,7 +3,6 @@ package com.example.AuthService.controller;
 import com.example.AuthService.dto.*;
 import com.example.AuthService.entity.Role;
 import com.example.AuthService.services.AuthenticationService;
-import com.example.AuthService.services.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -62,5 +61,17 @@ public class AuthController {
     public ResponseEntity<Long> parseIdFromToken(@RequestHeader("Authorization") String token) {
         String jwtToken = token.substring(7);
         return ResponseEntity.ok(authenticationService.parseTokenForUserId(jwtToken));
+    }
+
+    @PostMapping("/parse_role")
+    public ResponseEntity<String> parseRoleFromToken(@RequestHeader("Authorization") String token) {
+        String jwtToken = token.substring(7);
+        return ResponseEntity.ok(authenticationService.parseTokenForUserRole(jwtToken));
+    }
+
+    @PostMapping("/change_role")
+    public ResponseEntity<Void> changeRoleFromToken(@RequestBody ChangeRoleRequest request) {
+        authenticationService.changeRole(request);
+        return ResponseEntity.ok().build();
     }
 }
