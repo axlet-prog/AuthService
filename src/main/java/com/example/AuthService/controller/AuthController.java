@@ -8,6 +8,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Set;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/auth")
@@ -37,24 +39,28 @@ public class AuthController {
     }
 
     @PostMapping("/verify")
-    public ResponseEntity<Void> verifyToken(@RequestHeader("Authorization") String token, @RequestParam(value = "role", defaultValue = "client") String role) {
-        try {
-            Role userRole;
-            switch (role.trim().toLowerCase()) {
-                case "admin" -> userRole = Role.ROLE_ADMIN;
-                case "client" -> userRole = Role.ROLE_CLIENT;
-                case "courier" -> userRole = Role.ROLE_COURIER;
-                default -> throw new IllegalStateException("Unexpected value: " + role);
+    public ResponseEntity<Void> verifyToken(@RequestHeader("Authorization") String token, @RequestParam(value = "role", defaultValue = "client") Set<String> roles) {
+        boolean authorized = roles.stream().anyMatch((role) -> {
+            try {
+                Role userRole;
+                switch (role.trim().toLowerCase()) {
+                    case "admin" -> userRole = Role.ROLE_ADMIN;
+                    case "client" -> userRole = Role.ROLE_CLIENT;
+                    case "courier" -> userRole = Role.ROLE_COURIER;
+                    default -> throw new IllegalStateException("Unexpected value: " + role);
+                }
+                String jwtToken = token.substring(7);
+                return authenticationService.authorizeRequest(jwtToken, userRole);
+            } catch (Exception e) {
+                return false;
             }
-            String jwtToken = token.substring(7);
-            if (authenticationService.authorizeRequest(jwtToken, userRole)) {
-                return ResponseEntity.ok().build();
-            } else {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-            }
-        } catch (Exception e) {
+        });
+        if (authorized) {
+            return ResponseEntity.ok().build();
+        } else {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
+
     }
 
     @PostMapping("/parse_id")
