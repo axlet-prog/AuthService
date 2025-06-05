@@ -69,6 +69,11 @@ public class AuthController {
         return ResponseEntity.ok(authenticationService.parseTokenForUserRole(jwtToken));
     }
 
+    @PostMapping("/parse_role/{id}")
+    public ResponseEntity<String> parseRoleFromId(@PathVariable("id") long userId) {
+        return ResponseEntity.ok(authenticationService.getUserRole(userId));
+    }
+
     @PostMapping("/change_role")
     public ResponseEntity<Void> changeRoleFromToken(@RequestBody ChangeRoleRequest request) {
         authenticationService.changeRole(request);

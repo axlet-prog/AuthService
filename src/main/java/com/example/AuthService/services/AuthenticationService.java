@@ -103,6 +103,13 @@ public class AuthenticationService {
         return jwtService.getRoleFromToken(token);
     }
 
+    public String getUserRole(long userId) {
+        UserEntity userEntity = userRepository.findById(userId).orElseThrow(
+                () -> new RuntimeException("user with id " + userId + " not found")
+        );
+        return userEntity.getRole().toString();
+    }
+
     public void changeRole(ChangeRoleRequest request) {
         long targetUserId = request.getUserId();
         UserEntity userEntity = userRepository.findById(targetUserId).orElseThrow(
