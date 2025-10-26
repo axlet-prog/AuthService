@@ -4,7 +4,7 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "8081:8081"
+      - "8081:8080"
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/po_db
       SPRING_DATASOURCE_USERNAME: user2
@@ -16,8 +16,8 @@ services:
     image: postgres:latest
     restart: always
     environment:
-      POSTGRES_DB: po_db  # Замените на имя вашей БД
-      POSTGRES_USER: user2  # Замените на имя пользователя
-      POSTGRES_PASSWORD: pass  # Замените на пароль
+      POSTGRES_DB: po_db
+      POSTGRES_USER: user2
+      POSTGRES_PASSWORD: pass
     ports:
-      - "5423:5432"  # Порт, на котором будет доступна БД
+      - "5423:5432"
